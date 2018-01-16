@@ -1,6 +1,10 @@
 
 public class MoveResponse {
 	private int status; 
+	//0...move accepted
+	//1...move failed
+	//2...won the game
+	//3..found a treasure
 	private int x; 
 	private int y; 
 	

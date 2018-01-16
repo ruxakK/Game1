@@ -15,13 +15,12 @@ public class Client {
 	
 	private static int currentx = 0;
 	private static int currenty = 0;
+	private static boolean playerNum = false; 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws UnknownHostException, IOException
 	{
 		try
-		{
-			
-			
+		{	
 			Gson gson = new Gson(); 
 			
 			//connection w server setup
@@ -70,6 +69,8 @@ public class Client {
 		
 			System.out.println("Y-Coordinate: ");
 			currenty = scanner.nextInt();
+			
+			
 			messMap.getMap().setCY(currenty);
 			
 			str = gson.toJson(messMap); 
@@ -84,6 +85,11 @@ public class Client {
 			
 			currentx = fullmap.getCurrentx();
 			currenty = fullmap.getCurrenty();
+			
+			if(currenty > 3)
+			{
+				playerNum = true; 
+			}
 			
 			showplayinMap(fullmap);
 			
@@ -109,7 +115,7 @@ public class Client {
 							move.setDirection(0);
 							validdir = true; 
 							break; 
-						case "lef":
+						case "left":
 							move.setDirection(1);
 							validdir = true; 
 							break;
@@ -136,23 +142,30 @@ public class Client {
 				
 				MoveResponse movere = gson.fromJson(reader.readLine(), MoveResponse.class); 
 				
-				if(movere.isStatus()==0)
+				switch(movere.isStatus())
 				{
-					currentx=movere.getX();
-					currenty=movere.getY();
-					showplayinMap(fullmap);
+					case 0: 
+						currentx=movere.getX();
+						currenty=movere.getY();
+						showplayinMap(fullmap);
+						break;
+					case 1:
+						System.out.println("You lost the game");
+						end = true; 
+						break;
+					case 2: 
+						System.out.println("You won the game");
+						end = true; 
+						break; 
+					case 3: 
+						System.out.println("Treasure found!");
+						currentx=movere.getX();
+						currenty=movere.getY();
+						showplayinMap(fullmap);
+						break; 
+						
 				}
-				else if(movere.isStatus()==1)
-				{
-					System.out.println("You lost the game");
-					end = true; 
-					
-				}
-				else
-				{
-					System.out.println("You won the game");
-					end = true; 
-				}
+				
 			}
 			
 			
@@ -305,7 +318,7 @@ public class Client {
 		
 		x=ranXY%8; 
 		y=ranXY/8; 
-		
+		System.out.println(x + " " + y);
 		Map map = new Map(1, x, y); 
 		MessMap messMap = new MessMap(numb, map); 
 		
@@ -318,25 +331,53 @@ public class Client {
 	{
 		for(int i = 0; i<64; i++)
 		{
-
 			if(i%8==0)
 				System.out.print("\n");
+			if(playerNum)
+			{
+				if((currentx+currenty*8)==i)
+				{
+					System.out.print("(" + m.getNumb()[i] + ")");
 			
-			if((currentx+currenty*8)==i)
-			{
-				System.out.print("(" + m.getNumb()[i] + ")");
-		
-			}
+				}
+				else if((m.getCastle_x1()+m.getCastle_y1()*8)==i)
+				{
+					System.out.print("|" + m.getNumb()[i] + "|");
+				}
+				else if((m.getCastle_x1()+m.getCastle_y1()*8)==i-1 || (currentx+currenty*8)==i-1)
+				{
+						if(i%8==0)
+							System.out.print(" ");	
+						System.out.print(m.getNumb()[i]);
+				}
 				
-			else if((currentx+currenty*8)==i-1)
-			{
-				if(i%8==0)
-				System.out.print(" ");	
-				System.out.print(m.getNumb()[i]);
+				else
+				{	
+					System.out.print(" "+ m.getNumb()[i]);
+				}
 			}
-			else
-			{	
-				System.out.print(" "+ m.getNumb()[i]);
+			else {
+				
+				if((currentx+currenty*8)==i)
+				{
+					System.out.print("(" + m.getNumb()[i] + ")");
+			
+				}
+				else if((m.getCastle_x2()+m.getCastle_y2()*8)==i-1 || (currentx+currenty*8)==i-1)
+				{
+					if(i%8==0)
+						System.out.print(" ");	
+						System.out.print(m.getNumb()[i]);
+				}
+				else if((m.getCastle_x2()+m.getCastle_y2()*8)==i)
+				{
+					System.out.print("|" + m.getNumb()[i] + "|");
+				}
+				else
+				{	
+					System.out.print(" "+ m.getNumb()[i]);
+				}
+				
 			}
 		
 		}

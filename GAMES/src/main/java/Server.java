@@ -20,6 +20,11 @@ import com.google.gson.Gson;
 public class Server {
 	
 	static FullMap fullmap = new FullMap();
+	static boolean mcnt1 = false;
+	static boolean mcnt2 = false;
+	
+	static boolean hasT1 = false; 
+	static boolean hasT2 = false; 
 	
 	private static SessionFactory sessionFactory = null; 
 	private static SessionFactory configureSessionFactory() throws HibernateException {
@@ -32,6 +37,7 @@ public class Server {
 
 	public static void main(String[] args) throws IOException
 	{
+
 		try {
 		
 			//register clients
@@ -51,6 +57,10 @@ public class Server {
 			
 			Player player1 = thread1.getPlayer(); 
 			Player player2 = thread2.getPlayer(); 
+			
+			sendToDB_Player(player1);
+			sendToDB_Player(player2);
+			
 			MessMap m1 = thread1.getPlayer_map();
 			MessMap m2 = thread2.getPlayer_map();
 
@@ -92,14 +102,15 @@ public class Server {
 			
 			int turns = 0; 
 			boolean turn = false; 
-			
+			int gameStatus = 1; 
 			while(turns < 200)
 			{
 				
 				turn = !turn; 
 				if(turn)
 				{
-					if(!gameHandler(writer1, reader1, player1))
+					gameStatus=gameHandler(writer1, reader1, 1);
+					if(gameStatus==0)
 					{	
 						MoveResponse movere = new MoveResponse();
 						movere.setStatus(2);
@@ -108,11 +119,20 @@ public class Server {
 						writer2.flush();
 						break; 
 					}
-						
+					else if(gameStatus==2)
+					{
+						MoveResponse movere = new MoveResponse();
+						movere.setStatus(1);
+						reader2.readLine(); 
+						writer2.write(gson.toJson(movere)+ "\n");
+						writer2.flush();
+						break; 
+					}
 				}	
 				else
 				{
-					if(!gameHandler(writer2, reader2, player2))
+					gameStatus=gameHandler(writer2, reader2, 2);
+					if(gameStatus==0)
 					{	
 						MoveResponse movere = new MoveResponse();
 						movere.setStatus(2);
@@ -121,6 +141,16 @@ public class Server {
 						writer1.flush();
 						break; 
 					}
+					else if(gameStatus==2)
+					{
+						MoveResponse movere = new MoveResponse();
+						movere.setStatus(1);
+						reader1.readLine(); 
+						writer1.write(gson.toJson(movere)+ "\n");
+						writer1.flush();
+						break; 
+					}
+					
 				}	
 				++turns;
 			}
@@ -141,7 +171,7 @@ public class Server {
 		}
 	}
 	
-	public static void sendToDB()
+	public static void sendToDB_Player(Player p)
 	{
 		configureSessionFactory();
 		Session session = null; 
@@ -150,12 +180,9 @@ public class Server {
 		try {
 			session = sessionFactory.openSession();
 			tx = session.beginTransaction();
-			Map m = new Map(1,1,1);
-			session.save(m); 
+			session.save(p); 
 			tx.commit(); 
 			
-			
-
 			
 		} catch(Exception e)
 		{
@@ -167,7 +194,30 @@ public class Server {
 		}
 	}
 	
-	static boolean gameHandler(OutputStreamWriter writer, BufferedReader reader, Player player) throws IOException //if true player lost game
+	public static void sendToDB_Move(Move m)
+	{
+		configureSessionFactory();
+		Session session = null; 
+		Transaction tx = null; 
+		
+		try {
+			session = sessionFactory.openSession();
+			tx = session.beginTransaction();
+			session.save(m); 
+			tx.commit(); 
+			
+			
+		} catch(Exception e)
+		{
+			e.printStackTrace();
+			tx.rollback();
+		} finally {
+			if(session != null)
+				session.close();
+		}
+	}
+	
+	static int gameHandler(OutputStreamWriter writer, BufferedReader reader, int player) throws IOException //if true player lost game
 	{
 		MoveResponse movere = new MoveResponse();
 		Gson gson = new Gson(); 
@@ -182,9 +232,27 @@ public class Server {
 				}
 				else 
 				{
-					movere.setX(move.getX()+1);
+					if(fullmap.getFieldVal(move.getX()+1, move.getY())==1 || mcnt1 && player ==1 || mcnt2 && player == 2 )
+					{
+						movere.setX(move.getX()+1);
+						if(player==1)
+							mcnt1 = false;
+						else
+							mcnt2 = false; 
+					}
+					else
+					{
+						movere.setX(move.getX());
+						if(player==1)
+							mcnt1 = true;
+						else
+							mcnt2 = true; 
+					}
 					movere.setY(move.getY());
-					movere.setStatus(0);
+					if(player==1&&movere.getX()==fullmap.getTreasure_x1()&&movere.getY()==fullmap.getTreasure_y1() || player==2&&movere.getX()==fullmap.getTreasure_x2()&&movere.getY()==fullmap.getTreasure_y2())
+						movere.setStatus(3);
+					else
+						movere.setStatus(0);
 				}
 				break; 
 			case 1:
@@ -195,9 +263,27 @@ public class Server {
 				}
 				else 
 				{
-					movere.setX(move.getX()-1);
+					if(fullmap.getFieldVal(move.getX()-1, move.getY())==1 || mcnt1 && player == 1 ||  mcnt2 && player == 2 )
+					{
+						movere.setX(move.getX()-1);
+						if(player==1)
+							mcnt1 = false;
+						else
+							mcnt2 = false; 
+					}
+					else
+					{
+						movere.setX(move.getX());
+						if(player==1)
+							mcnt1 = true;
+						else
+							mcnt2 = true; 
+					}
 					movere.setY(move.getY());
-					movere.setStatus(0);
+					if(player==1&&movere.getX()==fullmap.getTreasure_x1()&&movere.getY()==fullmap.getTreasure_y1() || player==2&&movere.getX()==fullmap.getTreasure_x2()&&movere.getY()==fullmap.getTreasure_y2())
+						movere.setStatus(3);
+					else
+						movere.setStatus(0);
 				}
 				break;
 			case 2:
@@ -207,9 +293,27 @@ public class Server {
 				}
 				else 
 				{
+					if(fullmap.getFieldVal(move.getX(), move.getY()-1)==1 || mcnt1 && player == 1 || mcnt2 && player == 2)
+					{
+						movere.setY(move.getY()-1);
+						if(player==1)
+							mcnt1 = false;
+						else
+							mcnt2 = false;  
+					}
+					else
+					{
+						movere.setY(move.getY());
+						if(player==1)
+							mcnt1 = true;
+						else
+							mcnt2 = true;   
+					}
 					movere.setX(move.getX());
-					movere.setY(move.getY()-1);
-					movere.setStatus(0);
+					if(player==1&&movere.getX()==fullmap.getTreasure_x1()&&movere.getY()==fullmap.getTreasure_y1() || player==2&&movere.getX()==fullmap.getTreasure_x2()&&movere.getY()==fullmap.getTreasure_y2())
+						movere.setStatus(3);
+					else
+						movere.setStatus(0);
 				}
 				break; 
 			case 3:
@@ -219,24 +323,80 @@ public class Server {
 				}
 				else 
 				{
+					if(fullmap.getFieldVal(move.getX(), move.getY()+1)==1 || mcnt1 || mcnt2 && player == 2 )
+					{
+						movere.setY(move.getY()+1);
+						if(player==1)
+							mcnt1 = false;
+						else
+							mcnt2 = false; 
+					}
+					else
+					{
+						movere.setY(move.getY());
+						if(player==1)
+							mcnt1 = true;
+						else
+							mcnt2 = true;
+					}
 					movere.setX(move.getX());
-					movere.setY(move.getY()+1);
-					movere.setStatus(0);
+					if(player==1&&movere.getX()==fullmap.getTreasure_x1()&&movere.getY()==fullmap.getTreasure_y1() || player==2&&movere.getX()==fullmap.getTreasure_x2()&&movere.getY()==fullmap.getTreasure_y2())
+						movere.setStatus(3);
+					else
+						movere.setStatus(0);
 				}
 				break;
 			default:
-				return true; 
+				return 1; 
 		}
 		
 		System.out.println(gson.toJson(movere));
 		
+		if(movere.isStatus()==3)
+		{
+			if(player == 1)
+			{
+				hasT1=true; 
+				fullmap.setTreasure_x1(8);
+				fullmap.setTreasure_y1(8);
+			}
+			else 
+			{
+				hasT2=true; 
+				fullmap.setTreasure_x2(8);
+				fullmap.setTreasure_y2(8);
+			}
+		}
+
+		if(movere.isStatus()==0)
+		{
+			if(player==1)
+			{
+				if(hasT1&&movere.getX()==fullmap.getCastle_x2()&&movere.getY()==fullmap.getCastle_y2())
+					movere.setStatus(2);
+			}
+			else
+			{
+				if(hasT2&&movere.getX()==fullmap.getCastle_x1()&&movere.getY()==fullmap.getCastle_y1())
+					movere.setStatus(2);
+			}
+		}
+		
 		writer.write(gson.toJson(movere) + "\n");
 		writer.flush();
 		
-		if(movere.isStatus()==0)
-			return true;
+		if(movere.isStatus()==1)
+			return 0;
+		else if(movere.isStatus()==2)
+			return 2; 
 		else 
-			return false; 
+		{
+			sendToDB_Move(move);
+			System.out.println(gson.toJson(movere));
+			return 1; 
+			
+		}
+		
 	}
 
 }

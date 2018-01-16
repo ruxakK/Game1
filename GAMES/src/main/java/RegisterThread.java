@@ -33,8 +33,8 @@ public class RegisterThread extends Thread {
 	         String line = reader.readLine();
 	         Gson register_play = new Gson(); 
 
-	         Player p = register_play.fromJson(line, Player.class);
-	         System.out.println("Client" + playerId + " named: " + p.getName() + " connected");
+	         player = register_play.fromJson(line, Player.class);
+	         System.out.println("Client" + playerId + " named: " + player.getName() + " connected");
 	         
 	         Message m = new Message("OK", 0);
 	         line = register_play.toJson(m); 

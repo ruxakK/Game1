@@ -8,7 +8,7 @@ public class Move {
 	@GeneratedValue(generator="sqlite")
 		@TableGenerator(name="sqlite", table="id_gen",
 	    pkColumnName="name", valueColumnName="value",
-	    pkColumnValue="SEQUENCE",  allocationSize=1)
+	    pkColumnValue="SEQUENCE1",  allocationSize=1)
 	private int id; 
 	@Column(name="direction")
 	private int direction; 
