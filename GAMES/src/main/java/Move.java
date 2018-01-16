@@ -5,10 +5,13 @@ import javax.persistence.*;
 public class Move {
 	
 	@Id
-	@Column(name="id")
+	@GeneratedValue(generator="sqlite")
+		@TableGenerator(name="sqlite", table="id_gen",
+	    pkColumnName="name", valueColumnName="value",
+	    pkColumnValue="SEQUENCE",  allocationSize=1)
 	private int id; 
 	@Column(name="direction")
-	private String direction; 
+	private int direction; 
 	
 	@Column(name="x")
 	private int x; 
@@ -24,13 +27,13 @@ public class Move {
 		
 	}
 	
-	public Move(int id, String direction, int x, int y) {
+	public Move(int id, int direction, int x, int y) {
 		
 		if(id<0)
 			throw new IllegalArgumentException("ID is negative"); 
 		this.id=id; 
 		
-		if(direction!="right"&&direction!="left"&&direction!="up"&&direction!="down")
+		if(direction<0 || direction>3)
 			throw new IllegalArgumentException("Direction is invalid"); 
 		
 		if(!check_xy(x, y))
@@ -41,11 +44,39 @@ public class Move {
 		
 	}
 	
+	public Move(int direction)
+	{
+		if(direction<0 || direction>3)
+			throw new IllegalArgumentException("Direction is invalid"); 
+		this.direction=direction; 
+	}
+	
+	public Move()
+	{
+		
+	}
+	
+	public void setDirection(int direction) {
+		this.direction = direction;
+	}
+
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+
 	/**
 	 * Return the direction 
+	 * 0 is right
+	 * 1 is left
+	 * 2 is up 
+	 * 3 is down 
 	 * @return
 	 */
-	public String getDIR()
+	public int getDIR()
 	{
 		return direction; 
 	}

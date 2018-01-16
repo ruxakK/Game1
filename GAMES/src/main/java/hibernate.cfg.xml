@@ -14,6 +14,6 @@
   		
   		<mapping class="Player"/>
   		<mapping class="Map"/>
-  		<mapping class="Move/>
+  		<mapping class="Move"/>
     </session-factory>
 </hibernate-configuration>

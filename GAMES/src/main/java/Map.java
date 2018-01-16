@@ -1,6 +1,5 @@
 import javax.persistence.*;
 
-
 @Entity 
 @Table(name="Map")
 public class Map {
@@ -21,7 +20,7 @@ public class Map {
 	
 	private boolean check_xy(int x, int y)
 	{
-		if(x<0 || x>7 || y<0 || y>7)
+		if(x<0 || x>7 || y<0 || y>3)
 			return false; 
 		return true; 
 		
@@ -41,6 +40,20 @@ public class Map {
 		
 		this.castle_x=castle_x; 
 		this.castle_y=castle_y;
+		
+		this.treasure_x=treasure_x; 
+		this.treasure_y=treasure_y; 
+		
+	}
+	
+	public Map(int id, int treasure_x, int treasure_y)
+	{
+		if(id<0)
+			throw new IllegalArgumentException("ID is negative"); 
+		this.id=id; 
+		
+		if(!check_xy(treasure_x, treasure_y))
+			throw new IllegalArgumentException("Treasure Coordinate out of range");
 		
 		this.treasure_x=treasure_x; 
 		this.treasure_y=treasure_y; 
@@ -92,5 +105,21 @@ public class Map {
 	{
 		return id; 
 	}
+	
+	public void setCX(int cx)
+	{
+		if(cx<0 || cx>7)
+			throw new IllegalArgumentException("Coordinate X out of range");
+		castle_x=cx; 
+	}
+	
+	public void setCY(int cy)
+	{
+		if(cy<0 || cy>3)
+			throw new IllegalArgumentException("Coordinate Y out of range");
+		castle_y=cy; 
+	}
+	
+	
 	
 }
